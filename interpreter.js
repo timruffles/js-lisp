@@ -179,11 +179,6 @@ function undefinedFunction(name) {
 function makeEnvironment() {
   return {};
 }
-function binaryOperation(op,a,b) {
-  switch(op) {
-  }
-  undefinedFunction(op);
-}
 
 function set(key,val) {
   return env[":" + key] = val;
@@ -220,6 +215,77 @@ var forms = [
 env = {}
 baseEnvironment()
 
+var fs = require("fs");
+function putc(c) {
+  process.stdout.write(c);
+}
+
+function read(str) {
+  var list = [];
+  var token = "";
+  var listStack = [list];
+  var inString = false;
+  var quoteType = false;
+  function endToken() {
+    if(token === "") return;
+    if(/\d[\.\d]*/.test(token)) {
+      token = parseFloat(token,10);
+    }
+    list.push(token);
+    token = "";
+  }
+  function quote(ch) {
+    return ch == quoteType;
+  }
+  str.split("").forEach(function(ch) {
+    if(inString && !quote(ch)) {
+      return token = token + ch;
+    }
+    switch(ch) {
+      case "(":
+        var newList = [];
+        list.push(newList);
+        listStack.push(newList);
+        //console.log("\ndepth: " + listStack.length);
+        endToken();
+        list = newList;
+        break;
+      case ")":
+        endToken();
+        listStack.pop();
+        list = listStack[listStack.length - 1];
+        //console.log("\ndepth: " + listStack.length);
+        if(listStack.length === 0) throw new Error("Too many closing parens")
+        break;
+      case "'":
+      case '"':
+        inString = !inString;
+        quoteType = ch;
+        break;
+      case " ":
+        if(token.length > 0) {
+          endToken();
+        }
+        break;
+      case "\n":
+      case "\t":
+        break;
+      default:
+        token = token + ch;
+    }
+  })
+  if(listStack.length !== 1) throw new Error("Mismatched parens");
+  return list;
+}
+
+function runSource(src) {
+  var sexps = read(src);
+  return eval(sexps);
+}
+function runFile(path) {
+  return runSource(fs.readFileSync(path,"utf8"));
+}
+
 module.exports = eval = function(expression) {
   var evaluator = find(forms,function(form) {
     return form.is(expression)
@@ -227,5 +293,9 @@ module.exports = eval = function(expression) {
   if(!evaluator) throw new Error("Expression '" + JSON.stringify(expression) + "' couldn't be evaluated");
   return evaluator.eval(expression);
 }
+
+eval.read = read;
+eval.runSource = runSource;
+eval.runFile = runFile;
 
 

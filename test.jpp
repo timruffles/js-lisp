@@ -1,0 +1,7 @@
+(defn square (x) ((* x x)))
+(if (> (square 9) 80) 
+  (print yay!) 
+  (print arithmetic broken))
+(print (square 20))
+(print (+ 20 5))
+

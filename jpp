@@ -1,0 +1,5 @@
+#!/usr/local/bin/node
+
+var j = require("./interpreter.js");
+
+j.runFile(process.argv[2]);

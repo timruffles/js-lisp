@@ -59,4 +59,19 @@ describe("interpreter",function() {
     })
 
   })
+
+  context("reading source code",function() {
+    var testProg =  [
+      "(defn square (x) ((* x x)))",
+      "(if (> (square 9) 80)",
+      "  (print 'yay!')",
+      "  (print 'arithmetic broken'))"
+    ].join("\n")
+    it("small read to sexps",function() {
+      console.log(eval.read("(if (> (square 9) 80))"))
+    })
+    it("reads to sexps",function() {
+      console.log(eval.read(testProg))
+    })
+  })
 })
